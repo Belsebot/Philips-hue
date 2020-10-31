@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="refresh" content="60">
+
+<style>
+.button {
+	border: none;
+	color: white;
+	padding: 15px 32px;
+	text-align: center;
+	text-decoration: none;
+	display: inline-block;
+	font-size: 16px;
+	margin: 4px 2px;
+	cursor: pointer;
+}
+
+.button1 {background-color: #4CAF50;}
+.button2 {background-color: #008CBA;}
+
+.dot {
+	height: 25px;
+	width: 25px;
+	background-color: #FF0000;
+	border-radius: 50%;
+	display: inline-block;
+}
+
+</style>
+</head>
+
+<body onload="enter_page()">
+
+<h3>Philips Hue ohjaus</h3>
+
+<p>
+<button id=5 class="button button1"  onclick="valot(this.id)">Valo 1</button>
+<label for="bri1">Brightness 0-254</label>
+<input type="range" id="52" name="bri1" onchange="change_bright(this.id,this.value)" min="0" max="254" value="254">
+<spann id=51 class="dot"</spann>
+</p>
+<p>
+<button id=3 class="button button1"  onclick="valot(this.id)">Valo 2</button>
+<label for="bri2">Brightness 0-254</label>
+<input type="range" id="32" name="bri2" onchange="change_bright(this.id,this.value)" min="0" max="254" value="254">
+<spann id=31 class="dot"</spann>
+</p>
+<p>
+<button id=6 class="button button1"  onclick="valot(this.id)">Valo 3</button>
+<label for="bri3">Brightness 0-254</label>
+<input type="range" id="62" name="bri3" onchange="change_bright(this.id,this.value)" min="0" max="254" value="254">
+<spann id=61 class="dot"</spann>
+</p>
+<p>
+<button id=4 class="button button1"  onclick="valot(this.id)">Valo 4</button>
+<label for="bri4">Brightness 0-254</label>
+<input type="range" id="42" name="bri4" onchange="change_bright(this.id,this.value)" min="0" max="254" value="254">
+<spann id=41 class="dot"</spann>
+</p>
+<p>
+<button id=2 class="button button1"  onclick="valot(this.id)">Makuuhuone</button>
+<label for="bri5">Brightness 0-254</label>
+<input type="range" id="22" name="bri5" onchange="change_bright(this.id,this.value)" min="0" max="254" value="254">
+<spann id=21 class="dot"</spann>
+</p>
+<div id=50 style="display: none;">OFF</div>
+<div id=30 style="display: none;">OFF</div>
+<div id=60 style="display: none;">OFF</div>
+<div id=40 style="display: none;">OFF</div>
+<div id=20 style="display: none;">OFF</div>
+
+<script type="text/javascript" >
+
+	function enter_page() {
+
+		gethue(2);
+		gethue(3);
+		gethue(4);
+		gethue(5);
+		gethue(6);
+	}
+
+	function change_bright(id,arvo) {
+
+		var valo=(id-2)/10;
+		var state=true;
+
+		var arvo = document.getElementById(id).value;
+		
+		console.log(id,valo,arvo)
+
+		sendhue(valo,state,arvo);
+
+	}
+
+	function set_bright(valo,bri) {
+
+		a=valo*10+2;
+		var x=document.getElementById(a);
+		x.value = bri;		
+
+	}
+
+	function light_red(valo) {
+
+		a=valo*10+1;
+		var x=document.getElementById(a);
+		x.style.backgroundColor = "red";
+		
+	}
+
+	function light_green(valo) {
+
+		a=valo*10+1;
+		var x=document.getElementById(a);
+		x.style.backgroundColor = "green";
+
+	}
+
+	function valot(clicked_id) {
+
+		var valo=clicked_id;
+		var bri=254;		
+
+		a=clicked_id*10;
+		var x=document.getElementById(a);
+
+		if (x.innerHTML === "ON") {
+			var state=false;
+			x.innerHTML="OFF";
+			light_red(valo);
+		}
+		else {
+			var state=true;
+			x.innerHTML="ON";
+			light_green(valo);
+		}
+
+		sendhue(valo,state,bri);
+	}
+
+
+	function sendhue(valo,state,bri) {
+
+		var mode = "send";
+
+		var xmlhttp = new XMLHttpRequest();
+		xmlhttp.open("POST","lights.php",true);
+		xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+		xmlhttp.send("mode="+mode+"&valo="+valo+"&valotila="+state+"&kirkkaus="+bri);
+	}
+
+	function gethue(valo) {
+
+		var mode = "get";
+		var state = "";
+
+		var xmlhttp = new XMLHttpRequest();
+
+		xmlhttp.onreadystatechange = function() {
+			if (this.readyState==4 && this.status==200) {
+				var msg = JSON.parse(xmlhttp.responseText);
+				var tila = msg['state']['on'];
+				var bri = msg['state']['bri'];				
+
+				console.log(tila,bri,valo);
+
+				set_bright(valo,bri);
+
+				a=valo*10;
+				var x=document.getElementById(a);
+
+				if (tila===true) {
+					x.innerHTML="ON";
+					light_green(valo);
+					
+				}
+				else {
+					x.innerHTML="OFF";
+					light_red(valo);
+				}
+					
+	
+			}
+		};
+
+		xmlhttp.open("POST","lights.php",true);
+		xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+		xmlhttp.send("mode="+mode+"&valo="+valo+"&valotila="+state);
+	}
+
+</script>
+
+</body>
+</html>
